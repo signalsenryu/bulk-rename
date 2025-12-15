@@ -1,4 +1,5 @@
 from src.renamer import generate_new_name
+from src.renamer import find_files
 
 
 def test_generate_new_name_basic():
@@ -23,3 +24,14 @@ def test_generate_new_name_large_number():
     """Test filename generation with number exceeding padding width."""
     result = generate_new_name("track_{:02d}", 999, "mp3")
     assert result == "track_999.mp3"
+
+
+def test_find_files(tmp_path):
+    """Test finding files with specific extension in directory."""
+    (tmp_path / "video1.mp4").touch()
+    (tmp_path / "video2.mp4").touch()
+    (tmp_path / "image.jpg").touch() 
+    
+    result = find_files(tmp_path, "mp4")
+    
+    assert set(result) == {tmp_path / "video1.mp4", tmp_path / "video2.mp4"}

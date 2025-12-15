@@ -1,3 +1,5 @@
+from pathlib import Path
+
 def generate_new_name(pattern: str, index: int, extension: str) -> str:
     """
     Generate a new filename based on a formatting pattern.
@@ -26,3 +28,17 @@ def generate_new_name(pattern: str, index: int, extension: str) -> str:
 
     base_name = pattern.format(index)
     return f"{base_name}.{extension}"
+
+
+def find_files(directory_path: Path, extension: str) -> list[Path]:
+    """
+    Find all files with specified extension in directory.
+    
+    Args:
+        directory_path: Path to the directory to search
+        extension: File extension without dot (e.g., "mp4")
+        
+    Returns:
+        List of Path objects for found files
+    """
+    return [path for path in directory_path.glob(f"*.{extension}")]
