@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def generate_new_name(pattern: str, index: int, extension: str) -> str:
     """
     Generate a new filename based on a formatting pattern.
@@ -46,3 +47,16 @@ def find_files(directory_path: Path, extension: str) -> list[Path]:
         [Path("video1.mp4"), Path("video2.mp4")]
     """
     return list(directory_path.glob(f"*.{extension}"))
+
+
+def sort_files(files: list[Path]) -> list[Path]:
+    """
+    Sort files alphabetically by name.
+    
+    Args:
+        files: List of file paths
+        
+    Returns:
+        Sorted list of file paths
+    """
+    return sorted(files, key=lambda f: f.name)
