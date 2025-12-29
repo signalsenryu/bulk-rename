@@ -88,9 +88,9 @@ def generate_rename_plan(
 
     for index, old_path in enumerate(files, start=start_index):
         parent_dir = old_path.parent
-        extention = old_path.suffix[1:]
+        extension = old_path.suffix[1:]
 
-        new_filename = generate_new_name(pattern, index, extention)
+        new_filename = generate_new_name(pattern, index, extension)
         new_path = parent_dir / new_filename
 
         operations.append((old_path, new_path))
