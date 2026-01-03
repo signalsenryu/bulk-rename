@@ -2,7 +2,8 @@ from src.renamer import (
     generate_new_name,
     find_files,
     sort_files,
-    generate_rename_plan
+    generate_rename_plan,
+    show_preview,
 )
 from pathlib import Path
 
@@ -197,3 +198,29 @@ def test_generate_rename_plan_same_directory():
         (Path("a.mp4"), Path("video_01.mp4")),
         (Path("b.mp4"), Path("video_02.mp4")),
     ]
+
+
+def test_show_preview_basic(capsys):
+    """Test showing preview for two operations."""
+    operations = [
+        (Path("tmp/a.mp4"), Path("tmp/video_001.mp4")),
+        (Path("tmp/b.mp4"), Path("tmp/video_002.mp4")),
+    ]
+    
+    show_preview(operations)
+    captured = capsys.readouterr()
+
+    assert captured.out == (
+        "tmp/a.mp4 -> tmp/video_001.mp4\n"
+        "tmp/b.mp4 -> tmp/video_002.mp4\n"
+    )
+
+
+def test_show_preview_empty(capsys):
+    """Test showing preview for zero operations."""
+    operations = []
+
+    show_preview(operations)
+    captured = capsys.readouterr()
+
+    assert captured.out == ""

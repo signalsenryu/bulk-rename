@@ -31,7 +31,7 @@ def generate_new_name(pattern: str, index: int, extension: str) -> str:
     return f"{base_name}.{extension}"
 
 
-def find_files(directory_path: Path, extension: str) -> list[Path]:
+def find_files(directory: Path, extension: str) -> list[Path]:
     """
     Find all files with specified extension in directory.
     
@@ -46,7 +46,7 @@ def find_files(directory_path: Path, extension: str) -> list[Path]:
         >>> find_files(Path("./videos"), "mp4")
         [Path("video1.mp4"), Path("video2.mp4")]
     """
-    return list(directory_path.glob(f"*.{extension}"))
+    return list(directory.glob(f"*.{extension}"))
 
 
 def sort_files(files: list[Path]) -> list[Path]:
@@ -96,3 +96,21 @@ def generate_rename_plan(
         operations.append((old_path, new_path))
     
     return operations
+
+
+def show_preview(rename_plan: list[tuple[Path, Path]]) -> None:
+    """
+    Display preview of rename operations.
+    
+    Args:
+        rename_plan: List of (old_path, new_path) tuples
+        
+    Returns:
+        None (prints to console)
+        
+    Example output:
+        a.mp4 -> video_001.mp4
+        b.mp4 -> video_002.mp4
+    """
+    for operation in rename_plan:
+        print(f"{operation[0]} -> {operation[1]}")
