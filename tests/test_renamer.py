@@ -6,6 +6,7 @@ from src.renamer import (
     show_preview,
     confirm_action,
     save_backup,
+    validate_rename_plan,
 )
 from pathlib import Path
 import pytest
@@ -201,6 +202,52 @@ def test_generate_rename_plan_same_directory():
         (Path("a.mp4"), Path("video_01.mp4")),
         (Path("b.mp4"), Path("video_02.mp4")),
     ]
+
+
+def test_validate_rename_plan_no_conflicts(tmp_path):
+    """All files exist, no target conflicts."""
+    (tmp_path / "a.mp4").touch()
+    plan = [(tmp_path / "a.mp4", tmp_path / "video_001.mp4")]
+    
+    conflicts = validate_rename_plan(plan)
+    
+    assert conflicts == []
+
+
+def test_validate_rename_plan_target_exists(tmp_path):
+    """Target file already exists."""
+    (tmp_path / "a.mp4").touch()
+    (tmp_path / "video_001.mp4").touch()
+    
+    plan = [(tmp_path / "a.mp4", tmp_path / "video_001.mp4")]
+    
+    conflicts = validate_rename_plan(plan)
+    
+    assert len(conflicts) == 1
+    assert conflicts[0][0] == tmp_path / "a.mp4"
+    assert conflicts[0][1] == tmp_path / "video_001.mp4"
+    assert "already exists" in conflicts[0][2].lower()
+
+
+def test_validate_rename_plan_source_missing(tmp_path):
+    """Source file doesn't exist."""
+    plan = [(tmp_path / "a.mp4", tmp_path / "video_001.mp4")]
+    
+    conflicts = validate_rename_plan(plan)
+    
+    assert len(conflicts) == 1
+    assert "not found" in conflicts[0][2].lower()
+
+
+def test_validate_rename_plan_one_error_per_operation(tmp_path):
+    """One operation should produce at most one error."""
+    (tmp_path / "video_001.mp4").touch()
+
+    plan = [(tmp_path / "b.mp4", tmp_path / "video_001.mp4")]
+    
+    conflicts = validate_rename_plan(plan)
+    
+    assert len(conflicts) == 1
 
 
 def test_show_preview_basic(capsys):

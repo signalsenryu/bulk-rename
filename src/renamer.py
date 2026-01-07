@@ -98,6 +98,35 @@ def generate_rename_plan(
     return operations
 
 
+def validate_rename_plan(
+    rename_plan: list[tuple[Path, Path]]
+) -> list[tuple[Path, Path, str]]:
+    """
+    Validate rename operations before execution.
+    
+    Args:
+        rename_plan: List of (old_path, new_path) tuples
+        
+    Returns:
+        List of (old_path, new_path, error_message) for problematic operations
+        
+    Checks:
+        - Source file exists
+        - Target file doesn't exist
+    """
+    conflicts = []
+
+    for old_path, new_path in rename_plan:
+
+        if not old_path.exists():
+            conflicts.append((old_path, new_path, "Source file is not found."))
+
+        elif new_path.exists():
+            conflicts.append((old_path, new_path, "Target file already exists."))
+
+    return conflicts
+
+
 def show_preview(rename_plan: list[tuple[Path, Path]]) -> None:
     """
     Display preview of rename operations.
