@@ -7,6 +7,7 @@ from src.renamer import (
     confirm_action,
     save_backup,
     validate_rename_plan,
+    execute_rename,
 )
 from pathlib import Path
 import pytest
@@ -254,17 +255,17 @@ def test_show_preview_success(capsys, tmp_path):
     (tmp_path / "a.mp4").touch()
     (tmp_path / "b.mp4").touch()
     
-    operations = [
+    plan = [
         (tmp_path / "a.mp4", tmp_path / "video_001.mp4"),
         (tmp_path / "b.mp4", tmp_path / "video_002.mp4"),
     ]
     
-    show_preview(operations)
+    show_preview(plan)
     captured = capsys.readouterr()
     
     assert captured.out == (
-        f"✅{tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4\n"
-        f"✅{tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4\n"
+        f"✅ {tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4\n"
+        f"✅ {tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4\n"
     )
 
 
@@ -273,25 +274,25 @@ def test_show_preview_conflicts(capsys, tmp_path):
     (tmp_path / "b.mp4").touch()
     (tmp_path / "video_002.mp4").touch()
 
-    operations = [
+    plan = [
         (tmp_path / "a.mp4", tmp_path / "video_001.mp4"),
         (tmp_path / "b.mp4", tmp_path / "video_002.mp4"),
     ]
 
-    show_preview(operations)
+    show_preview(plan)
     captured = capsys.readouterr()
 
     assert captured.out == (
-        f"❌{tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4 [Source file is not found]\n"
-        f"❌{tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4 [Target file already exists]\n"
+        f"❌ {tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4 [Source file is not found]\n"
+        f"❌ {tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4 [Target file already exists]\n"
     )
 
 
 def test_show_preview_empty(capsys):
     """Test showing preview for zero operations."""
-    operations = []
+    plan = []
 
-    show_preview(operations)
+    show_preview(plan)
     captured = capsys.readouterr()
 
     assert captured.out == ""
@@ -326,12 +327,12 @@ def test_confirm_action(monkeypatch, user_input, expected):
 
 def test_save_backup_nonempty(tmp_path):
     """Test saving two operations to a backup file."""
-    operations = [
+    plan = [
         (Path("tmp/a.mp4"), Path("tmp/video_001.mp4")),
         (Path("tmp/b.mp4"), Path("tmp/video_002.mp4")),
     ]
 
-    backup_file = save_backup(operations, tmp_path)
+    backup_file = save_backup(plan, tmp_path)
 
     assert backup_file.exists()
     assert backup_file.read_text() == (
@@ -342,9 +343,61 @@ def test_save_backup_nonempty(tmp_path):
 
 def test_save_backup_empty(tmp_path):
     """Test saving zero operations to a backup file."""
-    operations = []
+    plan = []
 
-    backup_file = save_backup(operations, tmp_path)
+    backup_file = save_backup(plan, tmp_path)
 
     assert backup_file.exists()
     assert backup_file.read_text() == ""
+
+
+def test_execute_rename_nonempty(tmp_path, capsys):
+    """Test executing rename for a plan without conflicts."""
+    (tmp_path / "a.mp4").touch()
+    (tmp_path / "b.mp4").touch()
+
+    plan = [
+        (tmp_path / "a.mp4", tmp_path / "video_001.mp4"),
+        (tmp_path / "b.mp4", tmp_path / "video_002.mp4"),
+    ]
+    
+    execute_rename(plan)
+    expected = capsys.readouterr()
+    
+    assert (tmp_path / "video_001.mp4").exists()
+    assert (tmp_path / "video_002.mp4").exists()
+    assert expected.out == (
+        f"✅ {tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4\n"
+        f"✅ {tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4\n"
+    )
+
+
+def test_execute_rename_conflics(tmp_path, capsys):
+    """Test executing rename for a plan with conflicts."""
+    (tmp_path / "b.mp4").touch()
+    (tmp_path / "video_002.mp4").touch()
+    
+    plan = [
+        (tmp_path / "a.mp4", tmp_path / "video_001.mp4"),
+        (tmp_path / "b.mp4", tmp_path / "video_002.mp4"),
+    ]
+
+    execute_rename(plan)
+    captured = capsys.readouterr()
+
+    assert (tmp_path / "b.mp4").exists()
+    assert (tmp_path / "video_002.mp4").exists()
+    assert captured.out == (
+        f"⚠️ [SKIPPED] {tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4 [Source file is not found]\n"
+        f"⚠️ [SKIPPED] {tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4 [Target file already exists]\n"
+    )
+
+
+def test_execute_rename_empty(capsys):
+    """Test executing rename for an empty plan."""
+    plan = []
+
+    execute_rename(plan)
+    captured = capsys.readouterr()
+
+    assert captured.out == ""

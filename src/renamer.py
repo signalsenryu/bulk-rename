@@ -69,7 +69,7 @@ def generate_rename_plan(
     start_index: int = 1
 ) -> list[tuple[Path, Path]]:
     """
-    Generate rename operations (old_path, new_path) for each file.
+    Generate rename plan (old_path, new_path) for each file.
     
     Args:
         files: List of files to rename
@@ -85,7 +85,7 @@ def generate_rename_plan(
         [(Path("a.mp4"), Path("video_001.mp4")),
          (Path("b.mp4"), Path("video_002.mp4"))]
     """
-    operations = []
+    plan = []
 
     for index, old_path in enumerate(files, start=start_index):
         parent_dir = old_path.parent
@@ -94,9 +94,9 @@ def generate_rename_plan(
         new_filename = generate_new_name(pattern, index, extension)
         new_path = parent_dir / new_filename
 
-        operations.append((old_path, new_path))
+        plan.append((old_path, new_path))
     
-    return operations
+    return plan
 
 
 def validate_rename_plan(
@@ -112,8 +112,8 @@ def validate_rename_plan(
         List of (old_path, new_path, error_message) for problematic operations
         
     Checks:
-        - Source file exists
-        - Target file doesn't exist
+        - Source file is not found
+        - Target file already exists
     """
     conflicts = []
 
@@ -150,10 +150,10 @@ def show_preview(rename_plan: list[tuple[Path, Path]]) -> None:
 
         if (old_path, new_path) in conflict_dict:
             error_msg = conflict_dict[(old_path, new_path)]
-            print(f"❌{old_path} -> {new_path} [{error_msg}]")
+            print(f"❌ {old_path} -> {new_path} [{error_msg}]")
             
         else:
-            print(f"✅{old_path} -> {new_path}")
+            print(f"✅ {old_path} -> {new_path}")
 
 
 def confirm_action(prompt: str = "Proceed? (y/n): ") -> bool:
@@ -194,3 +194,30 @@ def save_backup(rename_plan: list[tuple[Path, Path]], backup_dir: Path) -> Path:
             backup.write(f"{old_path} -> {new_path}\n")
     
     return backup_path
+
+
+def execute_rename(rename_plan: list[tuple[Path, Path]]) -> None:
+    """
+    Execute rename operations after validation, skipping conflics, and display results.
+    
+    Args:
+        rename_plan: List of (old_path, new_path) tuples
+    
+    Returns:
+        None (prints to console)
+
+    Example output:
+        ✅ a.mp4 -> video_001.mp4
+        ⚠️ [SKIPPED] b.mp4 -> video_002.mp4 [Target file already exists]
+    """
+    conflicts = validate_rename_plan(rename_plan)
+
+    conflict_dict = {(old, new): error for old, new, error in conflicts}
+
+    for old_path, new_path in rename_plan:
+        if (old_path, new_path) in conflict_dict:
+            error_msg = conflict_dict[(old_path, new_path)]
+            print(f"⚠️ [SKIPPED] {old_path} -> {new_path} [{error_msg}]")
+        else:
+            old_path.rename(new_path)
+            print(f"✅ {old_path} -> {new_path}")
