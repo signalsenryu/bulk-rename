@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 
+
 def generate_new_name(pattern: str, index: int, extension: str) -> str:
     """
     Generate a new filename based on a formatting pattern.
@@ -119,10 +120,10 @@ def validate_rename_plan(
     for old_path, new_path in rename_plan:
 
         if not old_path.exists():
-            conflicts.append((old_path, new_path, "Source file is not found."))
+            conflicts.append((old_path, new_path, "Source file is not found"))
 
         elif new_path.exists():
-            conflicts.append((old_path, new_path, "Target file already exists."))
+            conflicts.append((old_path, new_path, "Target file already exists"))
 
     return conflicts
 
@@ -138,11 +139,21 @@ def show_preview(rename_plan: list[tuple[Path, Path]]) -> None:
         None (prints to console)
         
     Example output:
-        a.mp4 -> video_001.mp4
-        b.mp4 -> video_002.mp4
+        ✅ a.mp4 -> video_001.mp4
+        ❌ b.mp4 -> video_002.mp4 [Target file already exists]
     """
-    for operation in rename_plan:
-        print(f"{operation[0]} -> {operation[1]}")
+    conflicts = validate_rename_plan(rename_plan)
+    
+    conflict_dict = {(old, new): error for old, new, error in conflicts}
+
+    for old_path, new_path in rename_plan:
+
+        if (old_path, new_path) in conflict_dict:
+            error_msg = conflict_dict[(old_path, new_path)]
+            print(f"❌{old_path} -> {new_path} [{error_msg}]")
+            
+        else:
+            print(f"✅{old_path} -> {new_path}")
 
 
 def confirm_action(prompt: str = "Proceed? (y/n): ") -> bool:
@@ -179,7 +190,7 @@ def save_backup(rename_plan: list[tuple[Path, Path]], backup_dir: Path) -> Path:
     backup_path = backup_dir / f"backup_{timestamp}.txt"
 
     with backup_path.open("w", encoding="utf-8") as backup:
-        for old_operation, new_operation in rename_plan:
-            backup.write(f"{old_operation} -> {new_operation}\n")
+        for old_path, new_path in rename_plan:
+            backup.write(f"{old_path} -> {new_path}\n")
     
     return backup_path

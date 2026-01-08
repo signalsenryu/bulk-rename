@@ -250,19 +250,40 @@ def test_validate_rename_plan_one_error_per_operation(tmp_path):
     assert len(conflicts) == 1
 
 
-def test_show_preview_basic(capsys):
-    """Test showing preview for two operations."""
+def test_show_preview_success(capsys, tmp_path):
+    (tmp_path / "a.mp4").touch()
+    (tmp_path / "b.mp4").touch()
+    
     operations = [
-        (Path("tmp/a.mp4"), Path("tmp/video_001.mp4")),
-        (Path("tmp/b.mp4"), Path("tmp/video_002.mp4")),
+        (tmp_path / "a.mp4", tmp_path / "video_001.mp4"),
+        (tmp_path / "b.mp4", tmp_path / "video_002.mp4"),
     ]
     
     show_preview(operations)
     captured = capsys.readouterr()
+    
+    assert captured.out == (
+        f"✅{tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4\n"
+        f"✅{tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4\n"
+    )
+
+
+def test_show_preview_conflicts(capsys, tmp_path):
+    """Test showing preview for conflicts."""
+    (tmp_path / "b.mp4").touch()
+    (tmp_path / "video_002.mp4").touch()
+
+    operations = [
+        (tmp_path / "a.mp4", tmp_path / "video_001.mp4"),
+        (tmp_path / "b.mp4", tmp_path / "video_002.mp4"),
+    ]
+
+    show_preview(operations)
+    captured = capsys.readouterr()
 
     assert captured.out == (
-        "tmp/a.mp4 -> tmp/video_001.mp4\n"
-        "tmp/b.mp4 -> tmp/video_002.mp4\n"
+        f"❌{tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4 [Source file is not found]\n"
+        f"❌{tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4 [Target file already exists]\n"
     )
 
 
