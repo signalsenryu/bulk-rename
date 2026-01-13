@@ -1,5 +1,8 @@
 from pathlib import Path
 from datetime import datetime
+import argparse
+import sys
+import os
 
 
 def generate_new_name(pattern: str, index: int, extension: str) -> str:
@@ -220,4 +223,107 @@ def execute_rename(rename_plan: list[tuple[Path, Path]]) -> None:
             print(f"⚠️ [SKIPPED] {old_path} -> {new_path} [{error_msg}]")
         else:
             old_path.rename(new_path)
-            print(f"✅ {old_path} -> {new_path}")
+
+
+def parse_args():
+    """
+    Parse command-line arguments.
+
+    This function sets up and parses the command-line arguments required to run the tool.
+    It defines the following arguments:
+
+    - --path / -d (Path, required): The directory containing the files to rename.
+    - --pattern / -p (str, required): The naming pattern for the new files (e.g., 'file_{:03d}').
+    - --extension / -e (str, required): The file extension to filter files by (e.g., 'mp4').
+    - --start / -s (int, optional): The starting index for numbering files (default is 1).
+    - --version: Displays the program's version and exits.
+
+    Returns:
+        argparse.Namespace: An object containing the parsed command-line arguments.
+    """
+    MAJOR, MINOR, PATCH = 0, 0, 0
+
+    parser = argparse.ArgumentParser(
+        prog=f"Bulk Rename Utility v{MAJOR}.{MINOR}.{PATCH}",
+        description="Bulk rename files based on a pattern.",
+    )
+
+    parser.add_argument(
+        "-d", "--path", type=Path, required=True, 
+        help="Directory containing the files to rename",
+    )
+
+    parser.add_argument(
+        "-p", "--pattern", type=str, required=True, 
+        help="Naming pattern for new files (e.g., 'file_{:03d}')",
+    )
+
+    parser.add_argument(
+        "-e", "--extension", type=str, required=True, 
+        help="File extension to filter (e.g., 'mp4')",
+    )
+
+    parser.add_argument(
+        "-s", "--start", default=1, type=int, 
+        help="Starting index for numbering (default: 1)",
+    )
+
+    parser.add_argument(
+        "--version", action="version", version=parser.prog, 
+        help="Show program's version number and exit",
+    )
+
+    return parser.parse_args()
+
+
+def main():
+    """Entry point for CLI."""
+    args = parse_args()
+    
+    if not args.path.exists():
+        print(f"Path {args.path} doesn't exist", file=sys.stderr)
+        sys.exit(1)
+    elif not os.access(args.path, os.R_OK):
+        print(f"No permission to read {args.path}", file=sys.stderr)
+        sys.exit(1)
+    
+    files = find_files(args.path, args.extension)
+    
+    if not files:
+        print(f"No .{args.extension} files found in {args.path}", file=sys.stderr)
+        sys.exit(1)
+
+    sorted_files = sort_files(files)
+    
+    plan = generate_rename_plan(sorted_files, args.pattern, args.start)
+
+    conflicts = validate_rename_plan(plan)
+
+    show_preview(plan)
+
+    if conflicts:
+        suffix = "s" if len(conflicts) != 1 else ""
+        print(f"\nFound {len(conflicts)} conflict{suffix}")
+        if not confirm_action(f"Continue with skipping conflict{suffix}? (y/n): "):
+            sys.exit(0)
+    elif not confirm_action():
+        sys.exit(0)
+    
+    if not os.access(args.path, os.W_OK):
+        print(f"No permission to write {args.path}", file=sys.stderr)
+        sys.exit(1)
+
+    conflicted_pairs = {(old, new) for old, new, _ in conflicts}
+    effective_ops = [(old, new) for old, new in plan if (old, new) not in conflicted_pairs]
+
+    if not effective_ops:
+        print("Nothing to rename. All operations are conflics.")
+        sys.exit(0)
+    
+    save_backup(effective_ops, args.path)
+
+    execute_rename(effective_ops)
+
+
+if __name__ == "__main__":
+    main()

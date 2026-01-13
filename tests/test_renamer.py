@@ -252,6 +252,7 @@ def test_validate_rename_plan_one_error_per_operation(tmp_path):
 
 
 def test_show_preview_success(capsys, tmp_path):
+    """Test showing preview without conflicts."""
     (tmp_path / "a.mp4").touch()
     (tmp_path / "b.mp4").touch()
     
@@ -366,10 +367,7 @@ def test_execute_rename_nonempty(tmp_path, capsys):
     
     assert (tmp_path / "video_001.mp4").exists()
     assert (tmp_path / "video_002.mp4").exists()
-    assert expected.out == (
-        f"✅ {tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4\n"
-        f"✅ {tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4\n"
-    )
+    assert expected.out == ""
 
 
 def test_execute_rename_conflics(tmp_path, capsys):
