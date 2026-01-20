@@ -3,6 +3,7 @@ from datetime import datetime
 import argparse
 import sys
 import os
+from importlib.metadata import version, PackageNotFoundError
 
 
 def generate_new_name(pattern: str, index: int, extension: str) -> str:
@@ -241,10 +242,13 @@ def parse_args():
     Returns:
         argparse.Namespace: An object containing the parsed command-line arguments.
     """
-    MAJOR, MINOR, PATCH = 0, 0, 0
+    try:
+        __version__ = version("bulk-rename")
+    except PackageNotFoundError:
+        __version__ = "0.0.0-dev [PACKAGE IS NOT FOUND]"
 
     parser = argparse.ArgumentParser(
-        prog=f"Bulk Rename Utility v{MAJOR}.{MINOR}.{PATCH}",
+        prog=f"Bulk Rename Utility v{__version__}",
         description="Bulk rename files based on a pattern.",
     )
 
@@ -269,7 +273,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--version", action="version", version=parser.prog, 
+        "--version", action="version", version=__version__, 
         help="Show program's version number and exit",
     )
 
