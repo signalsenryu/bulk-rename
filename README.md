@@ -105,8 +105,8 @@ Continue with skipping conflicts? (y/n): n
 
 Clone the repository and install in editable mode:
 ```bash
-git clone https://github.com/signalsenryu/bulk_rename.git
-cd bulk_rename
+git clone https://github.com/signalsenryu/bulk-rename.git
+cd bulk-rename
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -e .
@@ -119,7 +119,7 @@ pytest tests/ -vv -s
 
 ### Project Structure
 ```
-bulk_rename/
+bulk-rename/
 ├── src/
 │   └── bulk_rename/
 │       ├── __init__.py
