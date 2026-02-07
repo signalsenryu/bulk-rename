@@ -9,6 +9,11 @@ Install via pip:
 pip install bulk-rename
 ```
 
+Or install via uv:
+```bash
+uv pip install bulk-rename
+```
+
 ## Usage
 
 After installation:
@@ -18,7 +23,14 @@ bulk-rename --help
 
 Or run without installing:
 ```bash
+# Using Python module
 python -m bulk_rename --help
+
+# Using uv run (from project directory)
+uv run bulk-rename --help
+
+# Using uvx (runs directly without installation)
+uvx bulk-rename --help
 ```
 
 ### Available Options
@@ -43,6 +55,11 @@ a.mp4  b.mp4  c.mp4
 Rename them with zero-padded numbering:
 ```bash
 bulk-rename -d ./videos -p "video_{:03d}" -e mp4
+```
+
+Or with uvx:
+```bash
+uvx bulk-rename -d ./videos -p "video_{:03d}" -e mp4
 ```
 
 Preview and confirm:
@@ -104,17 +121,42 @@ Continue with skipping conflicts? (y/n): n
 ### Setup
 
 Clone the repository and install in editable mode:
+
+**Using pip:**
 ```bash
 git clone https://github.com/signalsenryu/bulk-rename.git
 cd bulk-rename
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -e .
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+**Using uv:**
+```bash
+git clone https://github.com/signalsenryu/bulk-rename.git
+cd bulk-rename
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e ".[dev]"
+```
+
+Or even simpler with uv sync:
+```bash
+git clone https://github.com/signalsenryu/bulk-rename.git
+cd bulk-rename
+uv sync --all-extras
 ```
 
 ### Run Tests
+
+**Using pip:**
 ```bash
 pytest tests/ -vv -s
+```
+
+**Using uv:**
+```bash
+uv run pytest tests/ -vv -s
 ```
 
 ### Project Structure
