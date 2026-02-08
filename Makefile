@@ -1,5 +1,4 @@
-.PHONY: install lint format format-check test check build clean \
-        bump-patch bump-minor bump-major
+.PHONY: install lint format format-check test check build clean
 
 install:
 	uv sync --extra dev
@@ -14,10 +13,10 @@ format-check:
 	uv run ruff format --check
 
 test:
-	uv run pytest -vv
+	uv run pytest -vv -s --cov=. --cov-report=term-missing
 
 check: lint format-check test
-	@echo "✅ All checks passed!"
+	@echo "🏁 Quality gate passed at $$(date +'%H:%M:%S')"
 
 build:
 	uv build

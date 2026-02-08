@@ -153,12 +153,12 @@ uv sync --extra dev
 
 **Using pip:**
 ```bash
-pytest tests/ -vv -s
+pytest tests/ -vv -s --cov=. --cov-report=term-missing
 ```
 
 **Using uv:**
 ```bash
-uv run pytest tests/ -vv -s
+uv run pytest tests/ -vv -s --cov=. --cov-report=term-missing
 ```
 
 ### Project Structure
