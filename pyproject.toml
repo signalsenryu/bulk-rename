@@ -36,8 +36,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = [
-    "E", # pycodestyle errors
-    "F", # pyflakes
+    "E",
+    "F",
+    "I",
 ]
 
 [tool.pytest.ini_options]
