@@ -220,6 +220,14 @@ def execute_rename(rename_plan: list[tuple[Path, Path]]) -> None:
             old_path.rename(new_path)
 
 
+def non_negative_int(value: str) -> int:
+    """Argparse type that only accepts non-negative integers."""
+    ivalue = int(value)
+    if ivalue < 0:
+        raise argparse.ArgumentTypeError(f"Starting index must be non-negative, got {ivalue}")
+    return ivalue
+
+
 def parse_args():
     """
     Parse command-line arguments.
@@ -274,7 +282,7 @@ def parse_args():
         "-s",
         "--start",
         default=1,
-        type=int,
+        type=non_negative_int,
         help="Starting index for numbering (default: 1)",
     )
 
