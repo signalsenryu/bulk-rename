@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ from bulk_rename.cli import (
     find_files,
     generate_new_name,
     generate_rename_plan,
+    parse_args,
     save_backup,
     show_preview,
     sort_files,
@@ -388,6 +390,18 @@ def test_execute_rename_conflics(tmp_path, capsys):
         f"⚠️ [SKIPPED] {tmp_path}/a.mp4 -> {tmp_path}/video_001.mp4 [Source file is not found]\n"
         f"⚠️ [SKIPPED] {tmp_path}/b.mp4 -> {tmp_path}/video_002.mp4 [Target file already exists]\n"
     )
+
+
+def test_parse_args_rejects_negative_start(monkeypatch, capsys):
+    """Negative --start must fail with argparse error (exit 2), not traceback."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["bulk-rename", "-d", ".", "-p", "video_{:03d}", "-e", "mp4", "-s", "-2"],
+    )
+    with pytest.raises(SystemExit) as exc_info:
+        parse_args()
+    assert exc_info.value.code == 2
 
 
 def test_execute_rename_empty(capsys):
